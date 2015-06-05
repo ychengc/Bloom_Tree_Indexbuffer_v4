@@ -1,0 +1,67 @@
+©2015 Chengcheng Yang and Puyuan Yang. All Rights Reserved. 
+You need to first mount your SSD to /media/ssd/. "/media/ssd/" is the default file directory of mounted SSD.
+Make sure you have read and write access to the file directory "/media/ssd/".
+Of course, you can change the file directory of mounted SSD by command-line arguments.
+For example, if you mount your SSD to /media/newdisk/. You need to execute program with command-line arguments "-d /media/newdisk/"
+Initially, we generate a file size of 2GB, and the name of the file is "ssd_". This means that there are 500000 free pages with page size of 4KB.
+Each node occupies a page. Each time a new node is generated, a free page is allocated. In a similar way, when we delete a node, an occupied page is recycled.
+If you only want to test the performance of index create, you sholud specify the trace file of index creation by command-line arguments "-c your_trace_file". Generally, there are only insert operations in the trace file of index creation.
+If you want to test the performance of index maintenance, you should not only specify the trace file of index creation, but also specify the trace file which may consist of different kinds operations, for example, insert operations, search operations, delete operations, and range query operations. The command-line argument is "-m your_trace_file".
+We implement a log buffer that occupies 10% of the total buffer. As there are 11 tables in the TPCC trace, we use a simple way by dividing the log buffer into 11 independent parts. Each part serves for its corresponding index. If you generate a trace with x(x is an integer) indexes, you need to specify it with a command-line argument "-n x". The default value of x is 11.
+
+There are 4 kinds of operations in traces, namely insert operation, (point)search operation, delete operation, and range query operaion. 
+The format of operations in trace are shown as follows:
+insert|index_name|key|value
+delete|index_name|key|0
+search|index_name|key|0
+range|index_name|key_min|key_max|0
+
+There are 11 indexes in tpcc trace, which consist of 4 kinds of keys.
+All operations in 11 indexes are shown as follows:
+search|pk_warehouse|9|0
+search|pk_item|195860|0
+insert|history_pkey|260385|9763
+insert|pk_district|25310,18950|2354
+delete|pk_stock|25310,314856|0
+insert|pk_customer|35489,266165,330292|3421
+search|pk_customer|35489,266165,330292|0
+delete|pk_customer|35489,266165,330292|0
+range|pk_customer|35489,266165,330292|35789,269165,360292|0
+search|pk_new_order|25310,325305,305030|0
+search|pk_oorder|25310,325305,305030|0
+insert|ndx_customer_name|25310,266165,184593,212061|5621
+delete|pk_order_line|25310,35489,305030,305030|0
+search|ndx_oorder_carrier|25310,243619,101669,151282|0
+
+In fact, 4 kinds of keys are like these:
+key1: consist of one integer (like 8976), indexes of pk_warehouse, pk_item, history_pkey have key1.
+key2: consist of two integers (like 25310,18950), indexes of pk_district, pk_stock have key2.
+key3: consist of three integers (like 35489,266165,330292), indexes of pk_customer, pk_new_order, pk_oorder have key3.
+key4: consist of four integers (like 25310,243619,101669,151282), indexes of ndx_customer_name, pk_order_line, ndx_oorder_carrier have key4.
+
+When you generate trace file, you must follow the format we list above. 
+
+Here is an example of our program:
+./BloomTree -d /home/media/newdisk/ -c /home/ycc/new_trace/scalability/5000w/create -m /home/ycc/new_trace/scalability/5000w/query_0.5 -n 1
+trace is below:
+trace file of create index:
+/home/ycc/new_trace/scalability/5000w/create
+trace file of mixed operations:
+/home/ycc/new_trace/scalability/5000w/query_0.5
+-----------------------------------------
+Enter the exp type tpcc(1) or indexCreate(0)?
+1   //here, 0 means only want to test the performance of index create; 1 means we not only create the index, but also test the performance of index maintenance
+enter the selection for your buffer: 1-no buf; 2-lru buf
+2   //2 means we manage the buffer in a LRU mannner. 1 means no buffer, this means each time we complete an operation, we clear the buffer, no buffer manner is not used in our paper, we just use it for test.
+enter the buffer size(page number) ? --- 1024   //1024 means our buffer size =1024*4KB=4MB
+enter the bloom filter error---0.005    //this means the the false positive probability of a bloom filter
+enter the node err--->0.1 //this is pre-defined probability threshold of a solid node which has gone through delete operations
+enter the ofnum_tradeoff--->3 //this is the OF-leaf Node Size
+
+These are all instructions of our program. If you have any questions, please feel free to ask us anything. Email: ychengc@mail.ustc.edu.cn. You can also email Peiquan Jin, with the email: jpq@ustc.edu.cn.
+Considering differences in international time zones, we will reply in 24 hours since the time you send your email.
+
+
+
+
+
