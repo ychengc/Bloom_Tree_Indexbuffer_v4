@@ -501,13 +501,13 @@ typedef struct _bcell_key4
 
 typedef struct b_leafhead{
 	BYTE node_flag[3];		// every bit is a flag for an overnode, at most 16
-	                        // 0---free  which will be activedeleted node
+	                        // 0---free  which will be active deleted node
 							// 1---active and and full node which must not be active
 	BYTE nodeNum;
 	BYTE active;
-	//溢出节点的node_flag位是0 并且对应的bit_array都是0 那么该节点是free的 可作active的候选
-	//溢出节点的node_flag位是0 并且对应的bit_array>0 那么该节点是deleted 被删除过 可做候选
-	//溢出节点的node_flag位是1 那么该节点要么是active要么是满的 不能做下一个active的候选
+	//If the node flag  is 0, and the corresponding bit array of bloom filter is 0, we consider it as free. This node can be a candidate of active node
+	//If the node flag  is 0, and the corresponding bit array of bloom filter is not 0, we consider it as deleted . This node can be a candidate of active node
+	//If the node flag  is 1, then this node is active or solid without going through deletion. This node can't be a candidate of active node
 	BYTE reserved[0];
 }LeafHeadb;
 #endif

@@ -39,7 +39,7 @@ lrubuf::~lrubuf()
 	delete mgr_array;
 }
 
-char* lrubuf::className()             //Çå¿Õ»º³åÇø
+char* lrubuf::className()
 {
 	return "lrubuf_c";
 }
@@ -61,7 +61,7 @@ void lrubuf::clearbuf()
 	freebuf = bufsize;
 }
 
-void lrubuf::entermgr(LID pageid, iofdctl * disk)             ////ÔÚÄÚ´æÎªÅÌºÅÎªdiskÖĞpageidµÄÒ³Ãæ·ÖÅä¿Õ¼ä
+void lrubuf::entermgr(LID pageid, iofdctl * disk)
 {
 	int bufid = allocbufid();
 	actual_entermgr(pageid, disk, bufid);
@@ -69,7 +69,7 @@ void lrubuf::entermgr(LID pageid, iofdctl * disk)             ////ÔÚÄÚ´æÎªÅÌºÅÎª
 
 void lrubuf::actual_entermgr(LID pageid, iofdctl * disk, int bufid)
 {
-	getinlru(pageid, disk, bufid);                          //½«lru_array[bufid]ËùÖ¸ÏòµÄlpnode£¨ÅÌÎªdisk£¬Ò³ºÅÎªpageid£©²åÈëlruÁ´±íµÄ±íÍ·
+	getinlru(pageid, disk, bufid);
 	int hashid = pageid % bufsize;
 	npnode * newp = newPage(pageid, bufid, disk);
 	npnode * itp;
@@ -85,7 +85,7 @@ void lrubuf::actual_entermgr(LID pageid, iofdctl * disk, int bufid)
 	freebuf--;
 }
 
-void lrubuf::leavemgr(LID pageid, iofdctl * disk)   //ÔÚÄÚ´æÖĞÉ¾³ıÅÌºÅÎªdiskÖĞpageidµÄÒ³Ãæ
+void lrubuf::leavemgr(LID pageid, iofdctl * disk)
 {
 	npnode * tarp = findPage(pageid, disk);
 	npnode * itp;
@@ -127,7 +127,7 @@ void lrubuf::leavemgr(LID pageid, iofdctl * disk)   //ÔÚÄÚ´æÖĞÉ¾³ıÅÌºÅÎªdiskÖĞpa
 	freebuf++;
 }
 
-npnode * lrubuf::findPage(LID pageid, iofdctl * disk)          //ÔÚÄÚ´æÖĞÑ°ÕÒÅÌºÅÎªdiskÖĞpageidµÄÒ³Ãæ
+npnode * lrubuf::findPage(LID pageid, iofdctl * disk)
 {
 	int hashid = pageid % bufsize;
 	npnode * tarp;
@@ -168,7 +168,7 @@ npnode * lrubuf::findPage(LID pageid, iofdctl * disk)          //ÔÚÄÚ´æÖĞÑ°ÕÒÅÌº
 	return tarp;
 }
 
-int lrubuf::allocbufid()               //ÔÚlru_array·ÖÅäÒ»¸ö¿Õ¼ä£¬·µ»Øbufid
+int lrubuf::allocbufid()
 {
 	lpnode * itlp;
 	int bufid = -1;;
@@ -208,7 +208,7 @@ int lrubuf::getevict()
 	return mru;
 }
 
-lpnode * lrubuf::newLru(LID pageid, iofdctl * disk)         //Éú³ÉÒ»¸öÅÌÎªdisk£¬Ò³ÃæºÅÎªpageidµÄlruÁ´±íµÄ½áµã
+lpnode * lrubuf::newLru(LID pageid, iofdctl * disk)
 {
 	lpnode * nlru = new lpnode;
 	nlru->pageid = pageid;
@@ -218,7 +218,7 @@ lpnode * lrubuf::newLru(LID pageid, iofdctl * disk)         //Éú³ÉÒ»¸öÅÌÎªdisk£¬
 	return nlru;
 }
 
-void  lrubuf::rmlru(int bufid)                        //É¾³ılru_array[bufid]ÒÔ¼°µ÷ÕûlruÁ´
+void  lrubuf::rmlru(int bufid)
 {
 	if(lru_array[bufid] == NULL)
 	{
@@ -259,7 +259,7 @@ void  lrubuf::rmlru(int bufid)                        //É¾³ılru_array[bufid]ÒÔ¼°
 	}
 }
 
-void lrubuf::getinlru(LID pageid, iofdctl * disk, int bufid)         //½«lru_array[bufid]ËùÖ¸ÏòµÄlpnode£¨ÅÌÎªdisk£¬Ò³ºÅÎªpageid£©²åÈëlruÁ´±íµÄ±íÍ·
+void lrubuf::getinlru(LID pageid, iofdctl * disk, int bufid)
 {
 	lpnode * newlp = newLru(pageid, disk);
 	lru_array[bufid] = newlp;
@@ -291,7 +291,7 @@ void lrubuf::getinlru(LID pageid, iofdctl * disk, int bufid)         //½«lru_arr
 	}
 }
 
-void lrubuf::adjustlru(int bufid)         //°Ñlru_array[bufid]µ÷Õûµ½lruÁ´±íµÄ±íÍ·
+void lrubuf::adjustlru(int bufid)
 {
 	LID pageid = lru_array[bufid]->pageid;
 	int diskid = lru_array[bufid]->diskId;
@@ -299,7 +299,7 @@ void lrubuf::adjustlru(int bufid)         //°Ñlru_array[bufid]µ÷Õûµ½lruÁ´±íµÄ±íÍ
 	getinlru(pageid, disk_array(diskid), bufid);
 }
 
-int lrubuf::requestbuf(LID pageid, iofdctl * disk)         //ÔÚÄÚ´æÖĞÑ°ÕÒÅÌºÅÎªdiskµÄpageidµÄÒ³Ãæ£¬Èç¹ûÃ»ÓĞÔò¶ÁÈëÄÚ´æ£¬·µ»ØÔÚÄÚ´æµÄÆ«ÒÆÁ¿
+int lrubuf::requestbuf(LID pageid, iofdctl * disk)
 {
 	npnode * tarp;
 	tarp = findPage(pageid, disk);

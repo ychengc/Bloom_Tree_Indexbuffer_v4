@@ -24,7 +24,7 @@ nobuf::~nobuf()
 	delete bufarray;
 }
 
-void nobuf::clearbuf()     //��ջ�����
+void nobuf::clearbuf()
 {
 	npnode * iterp;
 	npnode * nextp;
@@ -42,7 +42,7 @@ void nobuf::clearbuf()     //��ջ�����
 		bufarray[k] = -1;
 }
 
-npnode * nobuf::findPage(LID pageid, iofdctl * disk)              //���ڴ���Ѱ���̺�Ϊdisk��pageid��ҳ��
+npnode * nobuf::findPage(LID pageid, iofdctl * disk)
 {
 	npnode * iterp;
 	iterp = pagelist;
@@ -63,7 +63,7 @@ npnode * nobuf::findPage(LID pageid, iofdctl * disk)              //���ڴ�
 	return NULL;
 }
 
-void nobuf::leavemgr(LID pageid, iofdctl * disk)    //���ڴ���ɾ���̺�Ϊdisk��pageid��ҳ��
+void nobuf::leavemgr(LID pageid, iofdctl * disk)
 {
 	npnode * iterp;
 	npnode * pre;
@@ -86,7 +86,7 @@ void nobuf::leavemgr(LID pageid, iofdctl * disk)    //���ڴ���ɾ��
 	delete iterp;
 }
 
-void nobuf::entermgr(LID pageid, iofdctl * disk)          //���ڴ�Ϊ�̺�Ϊdisk��pageid��ҳ�����ռ�
+void nobuf::entermgr(LID pageid, iofdctl * disk)
 {
 	int bufid;
 	int k;
@@ -114,7 +114,7 @@ char * nobuf::className()
 	return "nobuf_c";
 }
 
-int nobuf::requestbuf(LID pageid, iofdctl * disk)           //���ڴ���Ѱ���̺�Ϊdisk��pageid��ҳ�棬���û��������ڴ棬�������ڴ��ƫ����
+int nobuf::requestbuf(LID pageid, iofdctl * disk)
 {
 	npnode * tarp;
 	tarp = findPage(pageid, disk);

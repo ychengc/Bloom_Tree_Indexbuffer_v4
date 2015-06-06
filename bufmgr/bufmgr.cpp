@@ -3,7 +3,7 @@
 
 diskSet * diskinfo = NULL;
 
-bufmgr::bufmgr(int bufsz, int page_size):bufsize(bufsz), PAGE_SIZE(page_size)   //�����ڴ�
+bufmgr::bufmgr(int bufsz, int page_size):bufsize(bufsz), PAGE_SIZE(page_size)
 {
 	if(iMALLOC((void**)&buffer, PAGE_SIZE, PAGE_SIZE*bufsize)){
 		cout<<"Exception--->iMALLOC fail in nonbuf()"<<endl;
@@ -13,12 +13,12 @@ bufmgr::bufmgr(int bufsz, int page_size):bufsize(bufsz), PAGE_SIZE(page_size)   
 	io_write_num = 0;
 }
 
-bufmgr::~bufmgr()               //�ͷ��ڴ�
+bufmgr::~bufmgr()
 {
 	free(buffer);
 }
 
-npnode * bufmgr::newPage(LID pageid, int bufid, iofdctl * disk)         //�ڴ���Ϊdisk��pageidҳ�������ҳ
+npnode * bufmgr::newPage(LID pageid, int bufid, iofdctl * disk)
 {
 	npnode * newpage = new npnode;
 	newpage->pageid = pageid;
@@ -35,7 +35,7 @@ int bufmgr::get_bufsize()
 	return bufsize;
 }
 
-void bufmgr::syncbuf(npnode * tarp)          //���ڴ���tarpָ����ҳ��д�ص����
+void bufmgr::syncbuf(npnode * tarp)          //sync a dirty page to disk
 {
 	iofdctl * iodisk;
 	iodisk = disk_array(tarp->diskId);
@@ -55,13 +55,13 @@ void bufmgr::syncbuf(npnode * tarp)          //���ڴ���tarpָ���
 	}
 }
 
-BYTE * bufmgr::readbuf(LID pageid, iofdctl * disk)       //�����ڴ����̺�Ϊdisk��pageid��ҳ��ĵ�ַ
+BYTE * bufmgr::readbuf(LID pageid, iofdctl * disk)       //read a page to buffer
 {
 	int offbuf = requestbuf(pageid, disk);
 	return (BYTE*)(buffer+offbuf);
 }
 
-void bufmgr::writebuf(LID pageid, iofdctl * disk)           //�����ڴ����̺�Ϊdisk��pageid��ҳ��Ϊ��
+void bufmgr::writebuf(LID pageid, iofdctl * disk)           //set a page as dirty
 {
 	npnode * tarp;
 	if((tarp=findPage(pageid, disk)) == NULL)
@@ -72,7 +72,7 @@ void bufmgr::writebuf(LID pageid, iofdctl * disk)           //�����ڴ�
 	tarp->isDirty = DIRTY;
 }
 
-LID bufmgr::applypage(iofdctl * disk)    //��disk���ڴ�ͬʱ����һ��ҳ��ռ�
+LID bufmgr::applypage(iofdctl * disk)
 {
 	LID pageid;
 	disk->allocPage(&pageid, 1);
@@ -85,7 +85,7 @@ char * bufmgr::className()
 	return "bufmgr_c";
 }
 
-void bufmgr::deletepage(LID pageid, iofdctl * disk)     //�ڴ�����ɾ���̺�Ϊdisk��pageid��ҳ��
+void bufmgr::deletepage(LID pageid, iofdctl * disk)     //delete a page from both buffer and file
 {
 	if(disk->existPage(pageid) < 0)
 	{
@@ -100,7 +100,7 @@ void bufmgr::deletepage(LID pageid, iofdctl * disk)     //�ڴ�����ɾ
 	disk->delPage(&pageid, 1);
 }
 
-LID bufmgr::modifyDisk(LID src_pid, iofdctl * src_disk, iofdctl * disk)    //���̺�Ϊsrc_disk��src_pidҳ�桰Ǩ�ơ����̺�Ϊdisk�У���������disk�е�ҳ���
+LID bufmgr::modifyDisk(LID src_pid, iofdctl * src_disk, iofdctl * disk)    //this function is used for page migration in hybrid storage system
 {   
 	npnode * curpage;
 	if((curpage=findPage(src_pid, src_disk)) == NULL)

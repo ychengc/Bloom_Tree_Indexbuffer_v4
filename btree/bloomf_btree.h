@@ -8,19 +8,19 @@ using namespace std;
 #define ACTIVE_NO 0xFF
 #define HEAD_eBYTE_NUM 6  //the last byte of the page means its node type
 #define MAX_NODE_NUM(bit_bytes) ((PAGESIZE-HEAD_eBYTE_NUM-sizeof(int))/(bit_bytes+sizeof(int)+2*sizeof(KEY_TYPE)))  //calculate the max overnode num
-#define CUR_NODE_NUM(phead) (phead->nodeNum)  //当前溢出节点的数目
-#define ACTIVE(phead) (phead->active)  //active node的标号
+#define CUR_NODE_NUM(phead) (phead->nodeNum)  //current number of overflow nodes
+#define ACTIVE(phead) (phead->active)  //the label number of active node
 #define GET_KV_NUM(bit_bytes) ((PAGESIZE-HEAD_eBYTE_NUM-sizeof(int)-max_overflow_node_num*(bit_bytes+sizeof(int)+2*sizeof(KEY_TYPE)))/(sizeof(KEY_TYPE)+sizeof(VALUE_TYPE)))
-// 第n个bit array的首地址
-#define BIT_ARRAY(phead, n, bit_bytes) ((int *)(phead->reserved+n*bit_bytes))
 
-// 溢出节点的页面ID内存区首地址
-#define NODE_POINT(phead, bit_bytes) ((int *)(phead->reserved+max_overflow_node_num*bit_bytes))
+#define BIT_ARRAY(phead, n, bit_bytes) ((int *)(phead->reserved+n*bit_bytes)) // the address of the n'th bit array
 
-// KEY内存的首地址
+
+#define NODE_POINT(phead, bit_bytes) ((int *)(phead->reserved+max_overflow_node_num*bit_bytes)) // get the address of the pointers to all overflow nodes
+
+// If there is spare space in leaf head, some key-value pairs will be stored in leaf head. The following macro definition gets the address of keys stored in leaf head
 #define KEY_IN_HEAD(phead, bit_bytes) ((KEY_TYPE *)(phead->reserved+max_overflow_node_num*bit_bytes+sizeof(int)*(max_overflow_node_num+1)+2*sizeof(KEY_TYPE)*max_overflow_node_num))
 
-// VALUE内存的首地址
+// get the address of values stored in leaf head
 #define VALUE_IN_HEAD(phead, bit_bytes) ((VALUE_TYPE *)(phead->reserved+max_overflow_node_num*bit_bytes+sizeof(int)*(max_overflow_node_num+1)+2*sizeof(KEY_TYPE)*max_overflow_node_num+kv_num*sizeof(KEY_TYPE)))
 
 //get the address of the key range of all leaf pages
@@ -378,22 +378,22 @@ void BloomFilter_Btree<BCELL,KEY_TYPE>::clear_bpb( ){
 
 template <typename BCELL, typename KEY_TYPE>
 int BloomFilter_Btree<BCELL,KEY_TYPE>::bit_array_zero(int *bit_array){
-	//判断该bloom的bit数组是不是为0
-	int m = bit_bytes/sizeof(int);  //一个bit_array的下标总数
+	//Judging whether the bit array of bloom filter is 0
+	int m = bit_bytes/sizeof(int);
 	int k;
 	for(k=0; k<m; k++)
 	{
 		if(bit_array[k] > 0)
-			return 1;    //不是0
+			return 1;    //Not 0
 	}
-	return 0;       //数组是0
+	return 0;       //Is 0
 }
 
 template <typename BCELL, typename KEY_TYPE>
 void BloomFilter_Btree<BCELL,KEY_TYPE>::set_location(LeafHeadb *head, int nodeID, int pageid)
 {
 	int * node_array = NODE_POINT(head, bit_bytes);
-	node_array[nodeID] = pageid;     //分配新页面
+	node_array[nodeID] = pageid;     //Allocating a new page
 }
 
 template <typename BCELL, typename KEY_TYPE>
@@ -442,25 +442,24 @@ void BloomFilter_Btree<BCELL,KEY_TYPE>::set_cur_nodenum(LeafHeadb *head,int num)
 template <typename BCELL, typename KEY_TYPE>
 int BloomFilter_Btree<BCELL,KEY_TYPE>::get_new_active(LeafHeadb *head)
 {
-	//为新的active节点分配节点编号
-    //1. 有deleted节点存在，那么该节点做为active节点，对应的bloom数组清空，转化为active，
-    //返回对应的编号
-	//2. 没有deleted节点，则需要分配产生新的页面，返回新页面对应的编号，并赋值给active
+	//Allocating label number for the new active node
+	//1. If there exists a deleted node, we set it as active node, then emptying corresponding bit array of bloom filter
+	//2. If not, we need to allocate a new page as the active node
 	int i = 0;
 	int candidate = -1;
 	//BYTE flag;
 	//int * bitarray;
 	while(i<max_overflow_node_num)
 	{
-		if(get_nodeflag(head, i) == 0)//该编号的节点状态为0，是free or deleted
+		if(get_nodeflag(head, i) == 0)// the state flag of this node is 0, we consider it as deleted or free
 		{
 			if(get_location(head, i) == -1)  //free node
 				candidate = candidate<0 ? i:candidate;
 			else  // deleted node => actiuve
 			{
 				set_active(head,i);
-				bloomfilter->bloom_init(BIT_ARRAY(head, i, bit_bytes)); //清空对应的bloom
-				set_nodeflag(head, i, 1);   //状态改变
+				bloomfilter->bloom_init(BIT_ARRAY(head, i, bit_bytes)); //empty corresponding bit array of bloom filter
+				set_nodeflag(head, i, 1);   //change the state
 				return i;
 			}
 			break;
@@ -471,9 +470,9 @@ int BloomFilter_Btree<BCELL,KEY_TYPE>::get_new_active(LeafHeadb *head)
 		return candidate;
 	set_location(head, candidate,nativebtree<BCELL,KEY_TYPE>::applynode());//applyNewPage());
 	set_active(head,candidate);
-	head->nodeNum++;              //当前节点数目++1
-	bloomfilter->bloom_init(BIT_ARRAY(head, candidate, bit_bytes)); //清空对应的bloom
-	set_nodeflag(head, candidate, 1);   //状态改变
+	head->nodeNum++;
+	bloomfilter->bloom_init(BIT_ARRAY(head, candidate, bit_bytes)); //empty corresponding bit array of bloom filter
+	set_nodeflag(head, candidate, 1);   //change the state
 
 	return candidate;
 

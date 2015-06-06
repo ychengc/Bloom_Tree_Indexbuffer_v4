@@ -25,7 +25,7 @@ iofdctl::iofdctl(char * path, int storeSize, int dtype, int pagesize, int dID):b
 int iofdctl::loadDisk()
 {
 	file = open(filePath, O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR);
-	int cursize = lseek(file, 0, SEEK_END);   //�����µ��ļ�ƫ������ĩβ��
+	int cursize = lseek(file, 0, SEEK_END);   //File positioning
 	if(cursize >= fullSize*PAGE_SIZE){
 		close(file);
 		bytePhySize = cursize;
@@ -48,7 +48,7 @@ int iofdctl::loadDisk()
 		}
 		scale -= maxpos;
 	}
-	fsync(file);   //fsync����ͬ���ڴ����������޸ĵ��ļ���ݵ������豸��fsync ϵͳ���ÿ���ʹ��ȷ��ǿ��ÿ��д�붼�����µ�������
+	fsync(file);   //Synchronous
 	bytePhySize = lseek(file, 0, SEEK_END);
 	diskClose();
 	delete []buf;
@@ -70,7 +70,7 @@ int iofdctl::diskID()
 	return diskid;
 }
 
-iofdctl::~iofdctl()                               //������
+iofdctl::~iofdctl()
 {
 	IOFDfreeaddr::iterator it;
 	for(it=freeAddrList.begin(); it!=freeAddrList.end(); it++)
@@ -81,12 +81,12 @@ iofdctl::~iofdctl()                               //������
 	PIDmLID.clear();
 }
 
-IOFD_PID iofdctl::allocRawPage(IOFD_LID* pageid, int pagenum)     //����pagenum��ҳ�棬��Щҳ����߼���ַ�Ѿ�����pageid��
+IOFD_PID iofdctl::allocRawPage(IOFD_LID* pageid, int pagenum)     //actual allocate pagenum free pages
 {
 	pair<IOFDfreespace::iterator, IOFDfreespace::iterator> multipr;
 	IOFDfreespace::iterator itp; 
 	IOFD_FREESPACE * allocSpace;
-	itp = freeSpaceList.lower_bound(pagenum);   //����һ���������ָ���С��pagenum�ĵ�һ��Ԫ��
+	itp = freeSpaceList.lower_bound(pagenum);
 	int tPid = -1;
 
 	if(freeSize < pagenum)
@@ -144,7 +144,7 @@ IOFD_PID iofdctl::allocRawPage(IOFD_LID* pageid, int pagenum)     //����
 	return tPid; 
 }
 
-void iofdctl::allocPage(IOFD_LID * plid, int pagenum)    //ҳ����䣬����pagenum��ҳ�棬��Щҳ���߼���ַ�����䲢�Ҵ���plid�У������plid���������ַ
+void iofdctl::allocPage(IOFD_LID * plid, int pagenum)    //allocate pagenum free pages
 {
 	int temp; 
 	temp = rand()%(LOGICSPACE-pagenum);
@@ -157,7 +157,7 @@ void iofdctl::allocPage(IOFD_LID * plid, int pagenum)    //ҳ����䣬��
 	allocRawPage(plid, pagenum);
 }
 
-void iofdctl::lazyVacuum()      //������ղ�����freeAddrList��freeSpaceList�Ĳ���
+void iofdctl::lazyVacuum()
 {
 	IOFDfreeaddr::iterator itpr;
 	IOFDfreeaddr::iterator nextpr;
@@ -186,7 +186,7 @@ void iofdctl::lazyVacuum()      //������ղ�����freeAddrLis
 	}
 }
 
-void iofdctl::vacuumMap(IOFD_LID id1, IOFD_PID id2)       //��ַӳ����?id1ӳ�䵽id2
+void iofdctl::vacuumMap(IOFD_LID id1, IOFD_PID id2)
 {
 	IOFDlid_pid::iterator lpit;
 	PIDmLID.insert(IOFDlid_pid::value_type(id2, id1));
@@ -199,7 +199,7 @@ void iofdctl::vacuumMap(IOFD_LID id1, IOFD_PID id2)       //��ַӳ����
 	lpit->second = id2;
 }
 
-void iofdctl::clearDoubleList()         //ɾ������list
+void iofdctl::clearDoubleList()
 {
 	freeSpaceList.clear();
 	IOFDfreeaddr::iterator addrit;
@@ -208,10 +208,10 @@ void iofdctl::clearDoubleList()         //ɾ������list
 	freeAddrList.clear();
 }
 
-void iofdctl::fullVacuum()     //������ղ���
+void iofdctl::fullVacuum()
 {
 	IOFDlid_pid tempPL;       
-	tempPL.insert(PIDmLID.begin(), PIDmLID.end());     //����start��end��Ԫ��
+	tempPL.insert(PIDmLID.begin(), PIDmLID.end());
 	IOFDfreeaddr::iterator addrItp;
 	IOFDlid_pid::iterator plItp;
 	IOFDlid_pid::iterator plnextItp;
@@ -298,7 +298,7 @@ void iofdctl::diskClose()
 	}
 }
 
-void iofdctl::rawRead(IOFD_PID phyid, BYTE * buf, int bytesize)   //��phyidҳ���bytesize����ݵ�buf
+void iofdctl::rawRead(IOFD_PID phyid, BYTE * buf, int bytesize)   //read a page of phyid to buffer
 {
 	if(bytePhySize < phyid*PAGE_SIZE){
 		cout<<"Exception---> disk overflow in rawRead:bytePhySize="<<bytePhySize<<"; phyid*PAGE_SIZE="<<phyid<<"*"<<PAGE_SIZE<<endl;
@@ -316,7 +316,7 @@ void iofdctl::rawRead(IOFD_PID phyid, BYTE * buf, int bytesize)   //��phyid�
 	}
 }
 
-void iofdctl::rawWrite(IOFD_PID phyid, BYTE * buf, int bytesize)    //��buf��bytesize�����д��phyid��ҳ��
+void iofdctl::rawWrite(IOFD_PID phyid, BYTE * buf, int bytesize)    //write a page of phyid to file
 {
 	if(bytePhySize < phyid*PAGE_SIZE){
 		cout<<"Exception---> disk overflow in rawWrite:bytePhySize="<<bytePhySize<<"; phyid*PAGE_SIZE="<<phyid<<"*"<<PAGE_SIZE<<endl;
@@ -333,7 +333,7 @@ void iofdctl::rawWrite(IOFD_PID phyid, BYTE * buf, int bytesize)    //��buf�
 	}
 }
 
-void iofdctl::diskRead(IOFD_LID* pageid, BYTE * buf, int pagenum)           //�Ӵ�����ֱ�ӣ�DIRECT_ACCESS����pageid��ʶ��pagenum��ҳ�����buf
+void iofdctl::diskRead(IOFD_LID* pageid, BYTE * buf, int pagenum)      //read a page in DIRECT_ACCESS fashion
 {
 	int pos;
 	IOFD_PID *phyid = new IOFD_PID[pagenum];
@@ -347,7 +347,7 @@ void iofdctl::diskRead(IOFD_LID* pageid, BYTE * buf, int pagenum)           //�
 		phyid[i] = lpit->second;
 	}
 	int sum;
-	diskOpen(NORMAL_ACCESS);
+	diskOpen(DIRECT_ACCESS);
 	for(int i=0; i<pagenum;){
 		if(i == 0){
 			tempid = phyid[i];
@@ -376,7 +376,7 @@ void iofdctl::diskRead(IOFD_LID* pageid, BYTE * buf, int pagenum)           //�
 	delete []phyid;
 }
 
-void iofdctl::diskWrite(IOFD_LID* pageid, BYTE * buf, int pagenum)   //�Ӵ�����ֱ�ӣ�DIRECT_ACCESS����buf�����д��pageid��ʶ��pagenum��ҳ��
+void iofdctl::diskWrite(IOFD_LID* pageid, BYTE * buf, int pagenum)   //write a page in DIRECT_ACCESS fashion
 {
 	IOFD_PID * phyid = new IOFD_PID[pagenum];
 	IOFDlid_pid::iterator lpitr;
@@ -391,7 +391,7 @@ void iofdctl::diskWrite(IOFD_LID* pageid, BYTE * buf, int pagenum)   //�Ӵ��
 	}
 
 	int sum;
-	diskOpen(NORMAL_ACCESS);
+	diskOpen(DIRECT_ACCESS);
 	for(int i=0; i<pagenum;){
 		if(i == 0){
 			tempid = phyid[i];
@@ -420,21 +420,21 @@ void iofdctl::diskWrite(IOFD_LID* pageid, BYTE * buf, int pagenum)   //�Ӵ��
 	delete []phyid;
 }
 
-int iofdctl::existPage(IOFD_LID pageid)           //pageid�Ƿ����
+int iofdctl::existPage(IOFD_LID pageid)
 {
 	if(LIDmPID.find(pageid) == LIDmPID.end())
 		return -1;
 	return 1;
 }
 
-int iofdctl::isFreeSpace(int pagenum)           //�Ƿ���pagenum�����пռ�
+int iofdctl::isFreeSpace(int pagenum)
 {
 	if(pagenum > freeSize)
 		return -1;
 	return 1;
 }
 
-void iofdctl::delPage(IOFD_LID * pageid, int pagenum)     //ɾ��pageid�е�pagenum��ҳ��
+void iofdctl::delPage(IOFD_LID * pageid, int pagenum)     //recycle free pages
 {
 	IOFDlid_pid::iterator lpit;
 	vector<IOFD_PID> pidv;
@@ -484,7 +484,7 @@ void iofdctl::delPage(IOFD_LID * pageid, int pagenum)     //ɾ��pageid�е�
 	}
 }
 
-void iofdctl::clearAll ()  //ɾ�����е�ҳ��
+void iofdctl::clearAll ()
 {
 	freeSize = fullSize;
 	IOFDfreeaddr::iterator it;

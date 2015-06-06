@@ -19,14 +19,14 @@ class iofdctl{
 		const int diskid;
 		const int PAGE_SIZE;
 
-		//size都是以页面数目计算
-		int bytePhySize;  //变量以字节衡量
+
+		int bytePhySize;
 		int fullSize;
 		int freeSize;
 		const int bufsize;
 
-		IOFDfreespace freeSpaceList;  //空闲表管理--连续空闲空间排序
-		IOFDfreeaddr freeAddrList;   //为垃圾回收做空闲表排序
+		IOFDfreespace freeSpaceList;  // free space management
+		IOFDfreeaddr freeAddrList;   // free space management
 		IOFDlid_pid LIDmPID;
 		IOFDlid_pid PIDmLID;
 		
