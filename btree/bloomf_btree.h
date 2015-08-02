@@ -45,9 +45,9 @@ public:
 		//kv_num=2;
 		node_err=n_err;
 		bpbuff=bpbuf;
-		if(kv_num==0)
+		/*if(kv_num==0)
 			max_split_count=max_overflow_node_num;
-		else
+		else*/
 			max_split_count=max_overflow_node_num+1;
 	};
 	void insert_key(KEY_TYPE key, VALUE_TYPE value);
