@@ -105,5 +105,5 @@ void bloom::bit_set(int* bit_array, UINT64_RC hash)
 
 int bloom::bit_check(int* bit_array, UINT64_RC hash)
 {
-	return bit_array[hash>>SHIFT] & (1<<(hash & MASK)); 
+	return bit_array[hash>>SHIFT] & (1<<(hash & MASK));
 }
